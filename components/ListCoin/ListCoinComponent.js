@@ -1,120 +1,118 @@
-import React from "react";
-import { Card, ListItem } from "react-native-elements";
-import { View, Text, StyleSheet, FlatList, Image } from "react-native";
-import NumberFormat from "react-number-format";
-import { dynamicFontSize } from "../../utils/commons.js";
+import React, { Fragment, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from "react-native";
+import styles from "../../styles/stylesListcoin";
+import { createStackNavigator } from "@react-navigation/stack";
+import Coins from "./coins";
 
-class ListCoin extends React.Component {
-  state = {
-    data: [],
+import Api from "../../utils/api";
+
+const Stack = createStackNavigator();
+
+function ListCoin() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedValue, setSelectValue] = useState("usd");
+  const [refresh, setRefresh] = useState(false);
+  const [next, setNext] = useState(0);
+
+  useEffect(() => {
+    fecthCoins();
+  }, []);
+
+  useEffect(() => {
+    fecthCoins();
+  }, [refresh]);
+
+  const fecthCoins = async () => {
+    const res = await Api.getCoins(selectedValue, next);
+
+    setData(res);
   };
-  componentDidMount() {
-    this.fecthCoins();
-  }
-  fecthCoins = () => {
-    fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false" -H "accept: application/json'
-    )
-      .then((result) => result.json())
-      .then((data) =>
-        this.setState({
-          data,
-        })
-      );
+
+  const handleUsd = (item) => {
+    setSelectValue(item);
+    setRefresh(!refresh);
   };
-  keyExtractor = (item) => {
+
+  const handleEur = (item) => {
+    setSelectValue(item);
+    setRefresh(!refresh);
+  };
+  const handleJpy = (item) => {
+    setSelectValue(item);
+    setRefresh(!refresh);
+  };
+  const handleNext = () => {
+    setNext(next + 1);
+
+    setRefresh(!refresh);
+  };
+  const handlePrev = () => {
+    setNext(next - 1);
+
+    setRefresh(!refresh);
+  };
+
+  const keyExtractor = (item) => {
     return item.id.toString();
   };
-  renderEmpty = () => <Text>No hay informacion</Text>;
-  renderItem = ({ item }) => {
-    return (
-      <View style={styles.container}>
-        <View style={styles.left}>
-          <Text style={styles.name}>
-            #{item.market_cap_rank} {item.name}
-          </Text>
-          <Image source={{ uri: item.image }} style={styles.img} />
-        </View>
-        <View style={styles.right}>
-          <Text style={styles.price}>${item.current_price}</Text>
-          <Text
-            style={[
-              item.price_change_percentage_24h < 0 ? styles.red : styles.green,
-            ]}
-          >
-            {Math.round(item.price_change_percentage_24h * 100) / 100}%
-          </Text>
+  const renderEmpty = () => <Text>No hay informacion</Text>;
 
-          <Text style={styles.mc}>
-            $
-            {Number(item.market_cap)
-              .toFixed(2)
-              .replace(/\d(?=(\d{3})+\.)/g, "$&,")}
-          </Text>
-          <Text style={{ marginRight: 5 }}>Mcap</Text>
+  return (
+    <Fragment>
+      <View style={styles.sele}>
+        <Text style={styles.textCurre}>Select Currency</Text>
+        <View style={styles.viewButton}>
+          <TouchableOpacity onPress={() => handleUsd("usd")}>
+            <View style={[selectedValue === "usd" ? styles.blue : styles.gray]}>
+              <Text style={{ color: "white" }}>USD</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => handleEur("eur")}>
+            <View style={[selectedValue === "eur" ? styles.blue : styles.gray]}>
+              <Text style={{ color: "white" }}>EUR</Text>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => handleJpy("jpy")}>
+            <View style={[selectedValue === "jpy" ? styles.blue : styles.gray]}>
+              <Text style={{ color: "white" }}>JPY</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
-    );
-  };
-  render() {
-    return (
+
       <FlatList
-        keyExtractor={this.keyExtractor}
-        data={this.state.data}
-        ListEmptyComponent={() => this.renderEmpty()}
-        renderItem={this.renderItem}
+        keyExtractor={keyExtractor}
+        data={data}
+        extraData={refresh}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={fecthCoins} />
+        }
+        ListEmptyComponent={() => renderEmpty()}
+        renderItem={({ item }) => <Coins {...item} />}
       />
-    );
-  }
+
+      <View style={styles.pages}>
+        <TouchableOpacity onPress={() => handlePrev()}>
+          <View style={styles.pagesbtn}>
+            <Text style={{ color: "white" }}>Prev page</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleNext()}>
+          <View style={styles.pagesbtn}>
+            <Text style={{ color: "white" }}>Next page</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </Fragment>
+  );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "#EEEEEE",
-    paddingLeft: 10,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: "#D6D4D4",
-    borderRadius: 10,
-  },
-  img: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginLeft: 10,
-    marginTop: 5,
-  },
-  left: {
-    flex: 1,
-  },
-  right: {
-    flex: 1,
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  name: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginRight: 5,
-  },
-  mc: {
-    fontSize: 16,
-    marginRight: 5,
-  },
-  red: {
-    color: "red",
-    marginRight: 5,
-    fontSize: 18,
-  },
-  green: {
-    color: "green",
-    marginRight: 5,
-    fontSize: 18,
-  },
-});
+
 export default ListCoin;

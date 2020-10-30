@@ -1,36 +1,74 @@
 import React, { Component, Fragment } from "react";
-import { Text, ScrollView, View, FlatList } from "react-native";
+import { Text, View } from "react-native";
 import ListCoin from "./ListCoin/ListCoinComponent";
-import ExchangeComponent from "./exchange/exchangeComponent";
-import NavComponent from "./nav/navComponent";
+import ExchangeComponent from "./exchange/exchangeListComponent";
 import { StyleSheet } from "react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
+import WebView from "react-native-webview";
 
-const Tab = createBottomTabNavigator();
-
+const Tab = createMaterialBottomTabNavigator();
+const prueba = () => {
+  return <WebView source={{ uri: "https://reactnative.dev/" }} />;
+};
 class Main extends Component {
-  HomeScreen = () => {
-    return (
-      <View>
-        <Text>Hola</Text>
-      </View>
-    );
-  };
   render() {
     return (
-      <Fragment>
+      <View style={{ flex: 1, marginTop: 30 }}>
         <ExchangeComponent style={styles.ec} />
-        <ListCoin />
-      </Fragment>
+
+        <Tab.Navigator
+          initialRouteName="List"
+          activeColor="white"
+          style={{ backgroundColor: "white" }}
+        >
+          <Tab.Screen
+            name="List"
+            component={ListCoin}
+            options={{
+              tabBarLabel: "List",
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons
+                  name="currency-btc"
+                  color={color}
+                  size={26}
+                />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Convert"
+            component={prueba}
+            options={{
+              tabBarLabel: "Convert",
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons
+                  name="home-currency-usd"
+                  color={color}
+                  size={26}
+                />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Events"
+            component={ListCoin}
+            options={{
+              tabBarLabel: "Event",
+              tabBarIcon: ({ color }) => (
+                <MaterialCommunityIcons
+                  name="calendar"
+                  color={color}
+                  size={26}
+                />
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </View>
     );
   }
 }
 
-const styles = StyleSheet.create({
-  ec: {
-    marginBottom: 10,
-  },
-});
+const styles = StyleSheet.create({});
 export default Main;
